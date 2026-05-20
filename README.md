@@ -87,7 +87,7 @@ face-recognition-tdr/
 ## 1️⃣ Clonar el repositori
 
 ```bash
-git clone https://github.com/ELTEUUSUARI/face-recognition-tdr.git
+git clone https://github.com/J4-pro/face-recognition-tdr.git
 cd face-recognition-tdr
 ```
 
