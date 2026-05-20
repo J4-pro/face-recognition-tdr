@@ -1,58 +1,161 @@
+````markdown
 # 🧠 Face Recognition TDR
 
-Aquest projecte consisteix en el desenvolupament d’un sistema de reconeixement facial en temps real utilitzant intel·ligència artificial. El sistema és capaç de detectar i identificar persones a partir d’una càmera en directe, integrant diverses tecnologies de visió artificial i deep learning.
+> Sistema de reconeixement facial en temps real amb intel·ligència artificial, visió per computador i deep learning.
 
 ---
 
-## 🚀 Funcionalitats
+## 📖 Descripció
 
-- ✅ Detecció de cares en temps real amb YOLOv8
-- ✅ Reconeixement facial amb DeepFace (model ArcFace)
-- ✅ Sistema de comparació mitjançant embeddings
+Aquest projecte consisteix en el desenvolupament d’un sistema de reconeixement facial capaç de detectar i identificar persones en temps real a través d’una càmera.  
+El sistema integra models avançats de detecció facial i embeddings facials per aconseguir identificacions eficients i precises.
+
+---
+
+# ✨ Funcionalitats
+
+- ✅ Detecció de cares en temps real amb **YOLOv8**
+- ✅ Reconeixement facial amb **DeepFace (ArcFace)**
+- ✅ Comparació facial mitjançant embeddings
 - ✅ Càlcul de similitud amb distància cosinus
 - ✅ Tracking de cares entre fotogrames
-- ✅ Sistema de millora de resultats amb historial
-- ✅ Classificació en: identificat / dubtós / desconegut
-- ✅ Interfície web en temps real amb Flask
+- ✅ Sistema d’historial per estabilitzar resultats
+- ✅ Classificació:
+  - 🟢 Identificat
+  - 🟡 Dubtós
+  - 🔴 Desconegut
+- ✅ Interfície web en temps real amb **Flask**
 
 ---
 
-## 🧠 Tecnologies utilitzades
+# 🛠️ Tecnologies utilitzades
 
-- Python
-- OpenCV
-- YOLOv8 (Ultralytics)
-- DeepFace
-- ArcFace
-- Flask
-- NumPy
-- Multiprocessing
-
----
-
-## ⚙️ Funcionament del sistema
-
-El sistema segueix el següent pipeline:
-
-1. 📷 Captura de vídeo en temps real
-2. 🔍 Detecció de cares amb YOLOv8
-3. 🧠 Extracció d’embeddings amb DeepFace (ArcFace)
-4. 📊 Comparació amb la base de dades
-5. 📐 Càlcul de distància cosinus
-6. ✅ Decisió final (identitat)
-7. 🔁 Filtratge mitjançant historial
-8. 🌐 Visualització a la interfície web
+| Tecnologia | Funció |
+|------------|---------|
+| Python | Llenguatge principal |
+| OpenCV | Processament d’imatge |
+| YOLOv8 | Detecció facial |
+| DeepFace | Reconeixement facial |
+| ArcFace | Extracció d’embeddings |
+| Flask | Interfície web |
+| NumPy | Operacions matemàtiques |
+| Multiprocessing | Processament paral·lel |
 
 ---
 
-## 🧪 Resultats
+# ⚙️ Funcionament del sistema
 
-- Precisió aproximada: ~80%
-- Execució en temps real
-- Compatible amb ordinadors convencionals
+El sistema segueix aquest pipeline:
+
+```text
+📷 Captura de vídeo
+        ↓
+🔍 Detecció facial amb YOLOv8
+        ↓
+🧠 Extracció d’embeddings (ArcFace)
+        ↓
+📊 Comparació amb la base de dades
+        ↓
+📐 Distància cosinus
+        ↓
+✅ Identificació final
+        ↓
+🔁 Filtratge amb historial
+        ↓
+🌐 Visualització web
+```
 
 ---
 
-## ▶️ Com executar el projecte
+# 📂 Estructura del projecte
 
-### 1. Clonar el repositori
+```bash
+face-recognition-tdr/
+│
+├── main.py
+├── requirements.txt
+├── database/
+├── models/
+├── static/
+├── templates/
+└── README.md
+```
+
+---
+
+# 🚀 Instal·lació
+
+## 1️⃣ Clonar el repositori
+
+```bash
+git clone https://github.com/ELTEUUSUARI/face-recognition-tdr.git
+cd face-recognition-tdr
+```
+
+## 2️⃣ Instal·lar dependències
+
+```bash
+pip install -r requirements.txt
+```
+
+## 3️⃣ Executar el projecte
+
+```bash
+python main.py
+```
+
+---
+
+# 🌐 Interfície Web
+
+La interfície desenvolupada amb Flask permet:
+
+- 🎥 Veure el vídeo en directe
+- 🧠 Visualitzar identificacions
+- 📊 Mostrar l’estat de cada detecció
+- ⚡ Monitoritzar el sistema en temps real
+
+---
+
+# 🧪 Resultats
+
+| Aspecte | Resultat |
+|----------|-----------|
+| Precisió aproximada | ~80% |
+| Temps real | ✅ |
+| Compatible amb PC normals | ✅ |
+| Tracking facial | ✅ |
+
+---
+
+# 📸 Demo
+
+Afegeix aquí captures o GIFs del projecte:
+
+```md
+![Demo](images/demo.png)
+```
+
+---
+
+# 📈 Futures millores
+
+- 🔥 Optimització amb GPU
+- 👥 Suport multiusuari
+- 📷 Compatibilitat amb múltiples càmeres
+- 📊 Dashboard amb estadístiques
+- ☁️ Integració amb base de dades remota
+
+---
+
+# 👨‍💻 Autor
+
+**Treball de Recerca (TDR)**  
+Projecte desenvolupat amb Python i tecnologies de visió artificial.
+
+---
+
+# 📄 Llicència
+
+Aquest projecte està sota la llicència **MIT**.
+````
