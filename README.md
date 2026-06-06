@@ -1,96 +1,108 @@
 # Face Recognition TDR
 
-Sistema de reconeixement facial en temps real amb seguiment automàtic mitjançant una càmera controlada per servo i una Raspberry Pi.
+Sistema de reconeixement facial en temps real amb seguiment automàtic mitjançant una càmera controlada per una Raspberry Pi i un servo motor.
 
-## Descripció
+## Introducció
 
-Aquest projecte combina visió artificial, intel·ligència artificial i sistemes encastats per crear una plataforma capaç de:
+Aquest projecte ha estat desenvolupat com a Treball de Recerca (TDR) i combina visió artificial, intel·ligència artificial i sistemes encastats per crear un sistema capaç de detectar, identificar i seguir persones automàticament.
 
-* Detectar cares en temps real utilitzant YOLOv8.
-* Reconèixer persones mitjançant embeddings facials generats amb DeepFace (ArcFace).
-* Mostrar informació associada a cada persona identificada.
-* Controlar automàticament la posició d'una càmera muntada sobre un servo motor.
-* Comunicar un ordinador i una Raspberry Pi a través de Wi-Fi.
+L'arquitectura es divideix en dos dispositius:
 
-L'ordinador realitza tota la càrrega de processament (detecció i reconeixement facial), mentre que la Raspberry Pi s'encarrega únicament del control físic del servo.
+* **Ordinador principal**: realitza la detecció i el reconeixement facial.
+* **Raspberry Pi**: controla el servo motor que orienta la càmera.
+
+Tots dos dispositius es comuniquen a través d'una xarxa Wi-Fi mitjançant peticions HTTP.
 
 ---
 
-## Arquitectura del sistema
+# Funcionament del sistema
+
+1. La càmera USB envia vídeo en temps real a l'ordinador.
+2. El model YOLOv8 detecta les cares presents a la imatge.
+3. DeepFace genera embeddings facials de cada cara.
+4. Els embeddings es comparen amb una base de dades pròpia.
+5. Si una persona és reconeguda, es mostra la seva informació.
+6. Quan la persona es desplaça lateralment, l'ordinador envia una ordre a la Raspberry Pi.
+7. La Raspberry Pi mou el servo perquè la càmera continuï apuntant cap a la persona.
+
+---
+
+# Arquitectura
 
 ```text
-                           WIFI
-┌───────────────────────────────────────────┐
-│                                           │
-│   Ordinador Principal                     │
-│                                           │
-│  ┌────────────────────────────────────┐   │
-│  │ Flask Web Server                   │   │
-│  │ YOLOv8 Face Detection              │   │
-│  │ DeepFace Recognition               │   │
-│  │ Gestió d'Embeddings                │   │
-│  └────────────────────────────────────┘   │
-│                                           │
-└───────────────┬───────────────────────────┘
+                         WIFI
+
+┌────────────────────────────────────┐
+│        Ordinador Principal         │
+│                                    │
+│  Flask                            │
+│  OpenCV                           │
+│  YOLOv8 Face Detection            │
+│  DeepFace (ArcFace)               │
+│  Base de dades d'embeddings       │
+└───────────────┬────────────────────┘
                 │
-                │ HTTP Requests
+                │ HTTP
                 ▼
-┌───────────────────────────────────────────┐
-│ Raspberry Pi                              │
-│                                           │
-│ Flask Server                              │
-│ GPIOZero                                  │
-│ Control del Servo                         │
-└───────────────┬───────────────────────────┘
+┌────────────────────────────────────┐
+│          Raspberry Pi              │
+│                                    │
+│ Flask                             │
+│ GPIOZero                          │
+│ Control del Servo                 │
+└───────────────┬────────────────────┘
                 │
                 ▼
-          Servo Motor
+           Servo Motor
                 │
                 ▼
-            Càmera
+             Càmera
 ```
 
 ---
 
-## Tecnologies utilitzades
+# Tecnologies utilitzades
 
-### Visió artificial
+## Intel·ligència Artificial
 
-* OpenCV
-* YOLOv8 Face Detection
 * DeepFace
 * ArcFace
 
-### Backend
+## Visió Artificial
+
+* OpenCV
+* YOLOv8
+
+## Backend
 
 * Flask
 * Multiprocessing
 
-### Hardware
+## Hardware
 
 * Raspberry Pi
 * Servo Motor
 * Càmera USB
 
-### Comunicació
+## Comunicació
 
 * HTTP REST
 * Xarxa Wi-Fi
 
 ---
 
-## Estructura del projecte
+# Estructura del projecte
 
 ```text
 FACIAL_RECOGNITION/
 │
+├── faces/
+├── images/
 ├── models/
 │   ├── embeddings.pkl
 │   ├── yolov8n-face.pt
 │   └── yolov8s-face.pt
 │
-├── faces/
-├── images/
 ├── static/
 ├── templates/
 │   └── index2.html
@@ -98,69 +110,164 @@ FACIAL_RECOGNITION/
 ├── capture_faces.py
 ├── create_embeddings.py
 ├── main.py
-├── raspi.py
 ├── persones.py
+├── raspi.py
 │
-├── requirements.txt
+├── requirements-ordinador_principal.txt
+├── requirements-raspberry.txt
+│
 └── README.md
 ```
 
 ---
 
-## Funcionament
+# Fitxers principals
 
-### 1. Captura de vídeo
+## main.py
 
-La càmera USB envia vídeo en temps real a l'ordinador.
+Programa principal del sistema.
 
-### 2. Detecció facial
+Funcions:
 
-El model YOLOv8 detecta les cares presents en cada fotograma.
-
-### 3. Tracking
-
-Cada cara detectada rep un identificador temporal per fer-ne el seguiment entre fotogrames.
-
-### 4. Reconeixement facial
-
-Les cares detectades s'envien a un procés independent que:
-
-* Genera embeddings amb ArcFace.
-* Compara els embeddings amb la base de dades.
-* Determina la identitat de la persona.
-
-### 5. Visualització
-
-La interfície web mostra:
-
-* Nom.
-* Rol.
-* Edat.
-* Imatge de referència.
-* Estat del reconeixement.
-
-### 6. Control del servo
-
-Quan la cara es desplaça dins la imatge:
-
-* El PC envia una petició HTTP a la Raspberry Pi.
-* La Raspberry Pi modifica la posició del servo.
-* El servo orienta la càmera cap a la persona.
+* Captura de vídeo.
+* Detecció de cares.
+* Tracking de persones.
+* Reconeixement facial.
+* Interfície web.
+* Comunicació amb la Raspberry Pi.
 
 ---
 
-## Creació de la base de dades facial
+## raspi.py
 
-### Capturar imatges
+Servidor Flask executat a la Raspberry Pi.
 
-```bash
-python capture_faces.py
-```
+Funcions:
 
-Les imatges es desen dins la carpeta:
+* Recepció d'ordres HTTP.
+* Control del servo.
+* Moviment esquerra/dreta.
+
+---
+
+## capture_faces.py
+
+Permet capturar fotografies de les persones que es volen registrar al sistema.
+
+Les imatges es desen a:
 
 ```text
 faces/
+```
+
+---
+
+## create_embeddings.py
+
+Genera els embeddings facials de totes les persones registrades.
+
+Crea el fitxer:
+
+```text
+models/embeddings.pkl
+```
+
+---
+
+## persones.py
+
+Base de dades amb informació addicional de cada persona:
+
+* Nom
+* Edat
+* Rol
+* Imatge de referència
+
+---
+
+# Instal·lació
+
+## 1. Clonar el repositori
+
+```bash
+git clone https://github.com/J4-pro/face-recognition-tdr.git
+cd face-recognition-tdr
+```
+
+---
+
+## 2. Configurar l'ordinador principal
+
+Instal·lar dependències:
+
+```bash
+pip install -r requirements-ordinador_principal.txt
+```
+
+---
+
+## 3. Configurar la Raspberry Pi
+
+Instal·lar dependències:
+
+```bash
+pip install -r requirements-raspberry.txt
+```
+
+---
+
+# Configuració de la Raspberry Pi
+
+Al fitxer `main.py` cal configurar la IP de la Raspberry:
+
+```python
+RASPBERRY_IP = "http://192.168.X.X:5001"
+```
+
+Substituir-la per la IP real de la Raspberry Pi.
+
+---
+
+# Execució
+
+## Raspberry Pi
+
+Iniciar el servidor:
+
+```bash
+python raspi.py
+```
+
+El servidor quedarà escoltant al port:
+
+```text
+5001
+```
+
+---
+
+## Ordinador principal
+
+Executar:
+
+```bash
+python main.py
+```
+
+La interfície web quedarà disponible a:
+
+```text
+http://localhost:5000
+```
+
+---
+
+# Procés de registre de persones
+
+### Capturar fotografies
+
+```bash
+python capture_faces.py
 ```
 
 ### Generar embeddings
@@ -169,114 +276,31 @@ faces/
 python create_embeddings.py
 ```
 
-Es crearà:
-
-```text
-models/embeddings.pkl
-```
-
-Aquest fitxer conté els vectors facials de totes les persones registrades.
-
----
-
-## Instal·lació
-
-### Ordinador principal
-
-Instal·lar dependències:
-
-```bash
-pip install -r requirements.txt
-```
-
-Descarregar els models:
-
-```text
-models/yolov8n-face.pt
-models/yolov8s-face.pt
-```
-
----
-
-### Raspberry Pi
-
-Instal·lar:
-
-```bash
-pip install flask gpiozero
-```
-
-Executar:
-
-```bash
-python raspi.py
-```
-
-El servidor quedarà disponible al port:
-
-```text
-5001
-```
-
----
-
-## Execució
-
-### Raspberry Pi
-
-```bash
-python raspi.py
-```
-
-### Ordinador
+### Executar el sistema
 
 ```bash
 python main.py
 ```
 
-Accedir des del navegador:
-
-```text
-http://localhost:5000
-```
-
 ---
 
-## Comunicació PC ↔ Raspberry
+# Característiques
 
-El sistema utilitza peticions HTTP.
-
-### Moure a la dreta
-
-```http
-GET /dreta
-```
-
-### Moure a l'esquerra
-
-```http
-GET /esquerra
-```
-
-Aquestes peticions són enviades automàticament des de l'ordinador quan cal reajustar la posició de la càmera.
-
----
-
-## Característiques principals
-
-* Reconeixement facial en temps real.
-* Detecció amb YOLOv8.
-* Embeddings facials amb ArcFace.
+* Detecció facial en temps real.
+* Reconeixement facial amb DeepFace.
+* Tracking de persones.
+* Seguiment automàtic mitjançant servo.
+* Comunicació PC ↔ Raspberry per Wi-Fi.
 * Interfície web amb Flask.
-* Processament multiprocés.
-* Seguiment de persones.
-* Control remot de servo per Wi-Fi.
-* Sistema distribuït entre PC i Raspberry Pi.
+* Arquitectura distribuïda.
+* Sistema modular i ampliable.
 
 ---
 
-## Autor
+# Autor
 
 **J4-pro**
 
-Treball de Recerca (TDR) sobre reconeixement facial i seguiment automàtic de persones mitjançant visió artificial i sistemes embeguts.
+Treball de Recerca (TDR)
+
+Reconeixement facial i seguiment automàtic de persones mitjançant visió artificial, intel·ligència artificial i sistemes encastats.
