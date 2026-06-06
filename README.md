@@ -1,160 +1,282 @@
-# 🧠 Face Recognition TDR
+# Face Recognition TDR
 
-> Sistema de reconeixement facial en temps real amb intel·ligència artificial, visió per computador i deep learning.
+Sistema de reconeixement facial en temps real amb seguiment automàtic mitjançant una càmera controlada per servo i una Raspberry Pi.
 
----
+## Descripció
 
-## 📖 Descripció
+Aquest projecte combina visió artificial, intel·ligència artificial i sistemes encastats per crear una plataforma capaç de:
 
-Aquest projecte consisteix en el desenvolupament d’un sistema de reconeixement facial capaç de detectar i identificar persones en temps real a través d’una càmera.  
-El sistema integra models avançats de detecció facial i embeddings facials per aconseguir identificacions eficients i precises.
+* Detectar cares en temps real utilitzant YOLOv8.
+* Reconèixer persones mitjançant embeddings facials generats amb DeepFace (ArcFace).
+* Mostrar informació associada a cada persona identificada.
+* Controlar automàticament la posició d'una càmera muntada sobre un servo motor.
+* Comunicar un ordinador i una Raspberry Pi a través de Wi-Fi.
 
----
-
-# ✨ Funcionalitats
-
-- ✅ Detecció de cares en temps real amb **YOLOv8**
-- ✅ Reconeixement facial amb **DeepFace (ArcFace)**
-- ✅ Comparació facial mitjançant embeddings
-- ✅ Càlcul de similitud amb distància cosinus
-- ✅ Tracking de cares entre fotogrames
-- ✅ Sistema d’historial per estabilitzar resultats
-- ✅ Classificació:
-  - 🟢 Identificat
-  - 🟡 Dubtós
-  - 🔴 Desconegut
-- ✅ Interfície web en temps real amb **Flask**
+L'ordinador realitza tota la càrrega de processament (detecció i reconeixement facial), mentre que la Raspberry Pi s'encarrega únicament del control físic del servo.
 
 ---
 
-# 🛠️ Tecnologies utilitzades
-
-| Tecnologia | Funció |
-|------------|---------|
-| Python | Llenguatge principal |
-| OpenCV | Processament d’imatge |
-| YOLOv8 | Detecció facial |
-| DeepFace | Reconeixement facial |
-| ArcFace | Extracció d’embeddings |
-| Flask | Interfície web |
-| NumPy | Operacions matemàtiques |
-| Multiprocessing | Processament paral·lel |
-
----
-
-# ⚙️ Funcionament del sistema
-
-El sistema segueix aquest pipeline:
+## Arquitectura del sistema
 
 ```text
-📷 Captura de vídeo
-        ↓
-🔍 Detecció facial amb YOLOv8
-        ↓
-🧠 Extracció d’embeddings (ArcFace)
-        ↓
-📊 Comparació amb la base de dades
-        ↓
-📐 Distància cosinus
-        ↓
-✅ Identificació final
-        ↓
-🔁 Filtratge amb historial
-        ↓
-🌐 Visualització web
+                           WIFI
+┌───────────────────────────────────────────┐
+│                                           │
+│   Ordinador Principal                     │
+│                                           │
+│  ┌────────────────────────────────────┐   │
+│  │ Flask Web Server                   │   │
+│  │ YOLOv8 Face Detection              │   │
+│  │ DeepFace Recognition               │   │
+│  │ Gestió d'Embeddings                │   │
+│  └────────────────────────────────────┘   │
+│                                           │
+└───────────────┬───────────────────────────┘
+                │
+                │ HTTP Requests
+                ▼
+┌───────────────────────────────────────────┐
+│ Raspberry Pi                              │
+│                                           │
+│ Flask Server                              │
+│ GPIOZero                                  │
+│ Control del Servo                         │
+└───────────────┬───────────────────────────┘
+                │
+                ▼
+          Servo Motor
+                │
+                ▼
+            Càmera
 ```
 
 ---
 
-# 📂 Estructura del projecte
+## Tecnologies utilitzades
 
-```bash
-face-recognition-tdr/
+### Visió artificial
+
+* OpenCV
+* YOLOv8 Face Detection
+* DeepFace
+* ArcFace
+
+### Backend
+
+* Flask
+* Multiprocessing
+
+### Hardware
+
+* Raspberry Pi
+* Servo Motor
+* Càmera USB
+
+### Comunicació
+
+* HTTP REST
+* Xarxa Wi-Fi
+
+---
+
+## Estructura del projecte
+
+```text
+FACIAL_RECOGNITION/
 │
-├── main.py
-├── requirements.txt
-├── database/
 ├── models/
+│   ├── embeddings.pkl
+│   ├── yolov8n-face.pt
+│   └── yolov8s-face.pt
+│
+├── faces/
+├── images/
 ├── static/
 ├── templates/
+│   └── index2.html
+│
+├── capture_faces.py
+├── create_embeddings.py
+├── main.py
+├── raspi.py
+├── persones.py
+│
+├── requirements.txt
 └── README.md
 ```
 
 ---
 
-# 🚀 Instal·lació
+## Funcionament
 
-## 1️⃣ Clonar el repositori
+### 1. Captura de vídeo
+
+La càmera USB envia vídeo en temps real a l'ordinador.
+
+### 2. Detecció facial
+
+El model YOLOv8 detecta les cares presents en cada fotograma.
+
+### 3. Tracking
+
+Cada cara detectada rep un identificador temporal per fer-ne el seguiment entre fotogrames.
+
+### 4. Reconeixement facial
+
+Les cares detectades s'envien a un procés independent que:
+
+* Genera embeddings amb ArcFace.
+* Compara els embeddings amb la base de dades.
+* Determina la identitat de la persona.
+
+### 5. Visualització
+
+La interfície web mostra:
+
+* Nom.
+* Rol.
+* Edat.
+* Imatge de referència.
+* Estat del reconeixement.
+
+### 6. Control del servo
+
+Quan la cara es desplaça dins la imatge:
+
+* El PC envia una petició HTTP a la Raspberry Pi.
+* La Raspberry Pi modifica la posició del servo.
+* El servo orienta la càmera cap a la persona.
+
+---
+
+## Creació de la base de dades facial
+
+### Capturar imatges
 
 ```bash
-git clone https://github.com/J4-pro/face-recognition-tdr.git
-cd face-recognition-tdr
+python capture_faces.py
 ```
 
-## 2️⃣ Instal·lar dependències
+Les imatges es desen dins la carpeta:
+
+```text
+faces/
+```
+
+### Generar embeddings
+
+```bash
+python create_embeddings.py
+```
+
+Es crearà:
+
+```text
+models/embeddings.pkl
+```
+
+Aquest fitxer conté els vectors facials de totes les persones registrades.
+
+---
+
+## Instal·lació
+
+### Ordinador principal
+
+Instal·lar dependències:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 3️⃣ Executar el projecte
+Descarregar els models:
+
+```text
+models/yolov8n-face.pt
+models/yolov8s-face.pt
+```
+
+---
+
+### Raspberry Pi
+
+Instal·lar:
+
+```bash
+pip install flask gpiozero
+```
+
+Executar:
+
+```bash
+python raspi.py
+```
+
+El servidor quedarà disponible al port:
+
+```text
+5001
+```
+
+---
+
+## Execució
+
+### Raspberry Pi
+
+```bash
+python raspi.py
+```
+
+### Ordinador
 
 ```bash
 python main.py
 ```
 
----
+Accedir des del navegador:
 
-# 🌐 Interfície Web
-
-La interfície desenvolupada amb Flask permet:
-
-- 🎥 Veure el vídeo en directe
-- 🧠 Visualitzar identificacions
-- 📊 Mostrar l’estat de cada detecció
-- ⚡ Monitoritzar el sistema en temps real
-
----
-
-# 🧪 Resultats
-
-| Aspecte | Resultat |
-|----------|-----------|
-| Precisió aproximada | ~80% |
-| Temps real | ✅ |
-| Compatible amb PC normals | ✅ |
-| Tracking facial | ✅ |
-
----
-
-# 📸 Demo
-
-Afegeix aquí captures o GIFs del projecte:
-
-```md
-![Demo](images/demo.png)
+```text
+http://localhost:5000
 ```
 
 ---
 
-# 📈 Futures millores
+## Comunicació PC ↔ Raspberry
 
-- 🔥 Optimització amb GPU
-- 👥 Suport multiusuari
-- 📷 Compatibilitat amb múltiples càmeres
-- 📊 Dashboard amb estadístiques
-- ☁️ Integració amb base de dades remota
+El sistema utilitza peticions HTTP.
+
+### Moure a la dreta
+
+```http
+GET /dreta
+```
+
+### Moure a l'esquerra
+
+```http
+GET /esquerra
+```
+
+Aquestes peticions són enviades automàticament des de l'ordinador quan cal reajustar la posició de la càmera.
 
 ---
 
-# 👨‍💻 Autor
+## Característiques principals
 
-**Treball de Recerca (TDR)**  
-Projecte desenvolupat amb Python i tecnologies de visió artificial.
+* Reconeixement facial en temps real.
+* Detecció amb YOLOv8.
+* Embeddings facials amb ArcFace.
+* Interfície web amb Flask.
+* Processament multiprocés.
+* Seguiment de persones.
+* Control remot de servo per Wi-Fi.
+* Sistema distribuït entre PC i Raspberry Pi.
 
 ---
 
-# 📄 Llicència
+## Autor
 
-Aquest projecte està sota la llicència **MIT**.
-````
+**J4-pro**
+
+Treball de Recerca (TDR) sobre reconeixement facial i seguiment automàtic de persones mitjançant visió artificial i sistemes embeguts.
