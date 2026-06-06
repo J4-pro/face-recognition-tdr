@@ -1,0 +1,10 @@
+.idea/
+__pycache__/
+venv_lbph/
+*.pyc
+CODIS NO IMPORTANTS/
+deepface/
+faces/
+persones.py
+static/
+images/
