@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<title>Face Recognition</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI";
+}
+
+body{
+    width:100vw;
+    height:100vh;
+    background:#000;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+/* FINESTRA */
+.window{
+    width:1800px;
+    height:900px;
+
+    background:#1e293b;
+    border-radius:20px;
+    padding:20px;
+}
+
+/* TITOL */
+.titol{
+    width:100%;
+    height:70px;
+
+    background:#2563eb;
+    border-radius:12px;
+
+    display:flex;
+    align-items:center;
+
+    padding-left:20px;
+
+    color:white;
+    font-size:28px;
+    font-weight:bold;
+}
+
+/* CONTINGUT */
+.horitzontal{
+    margin-top:20px;
+
+    width:100%;
+    height:760px;
+
+    display:flex;
+    gap:20px;
+}
+
+/* VIDEO */
+.container_video{
+    flex:1;
+
+    background:#020617;
+    border-radius:12px;
+
+    padding:15px;
+
+    color:white;
+
+    display:flex;
+    flex-direction:column;
+
+    overflow:hidden;
+    position:relative;
+}
+
+/* CANVAS */
+.container_video canvas{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 0 25px #0005;
+}
+
+/* COLUMNA DRETA */
+.vertical{
+    width:520px;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:20px;
+}
+
+/* RECONEIXEMENT */
+.container{
+    flex:1;
+
+    background:#020617;
+    border-radius:12px;
+
+    padding:15px;
+
+    color:white;
+
+    overflow:hidden;
+}
+
+/* MOVIMENT */
+.container_mov{
+    height:160px;
+
+    background:#020617;
+    border-radius:12px;
+
+    padding:15px;
+
+    color:white;
+}
+
+/* LLISTA CARES */
+#facesContainer{
+    margin-top:15px;
+
+    height:calc(100% - 50px);
+
+    overflow-y:auto;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:10px;
+}
+
+/* TARGETA */
+.ident{
+    width:100%;
+    min-height:80px;
+
+    background:#3b82f6;
+    border-radius:10px;
+
+    display:flex;
+    align-items:center;
+
+    padding:10px;
+
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity:0; transform:translateY(5px); }
+    to { opacity:1; transform:translateY(0); }
+}
+
+/* FOTO */
+.foto{
+    width:60px;
+    height:60px;
+
+    border-radius:8px;
+    overflow:hidden;
+
+    flex-shrink:0;
+}
+
+.foto img{
+    width:100%;
+    height:100%;
+
+    object-fit:cover;
+}
+
+/* TEXT */
+.stats{
+    margin-left:12px;
+    font-size:14px;
+    color:white;
+}
+
+/* BOTÓ */
+.boto {
+    width: 100%;
+    height: 50px;
+
+    background: #1e293b;
+    color: white;
+
+    border: none;
+    border-radius: 10px;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.boto:hover {
+    background: #3b82f6;
+    transform: scale(1.02);
+}
+
+.boto:active {
+    transform: scale(0.98);
+    background: #1d4ed8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="window">
+
+    <div class="titol">
+        FACE RECOGNITION TDR
+    </div>
+
+    <div class="horitzontal">
+
+        <!-- VIDEO -->
+        <div class="container_video">
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="vertical">
+
+            <div class="container">
+                <h1>RECONEIXEMENT</h1>
+
+                <div id="facesContainer">
+                    <p>Esperant detecció...</p>
+                </div>
+            </div>
+
+            <div class="container_mov">
+                <h1>MOVIMENT-SERVO</h1>
+
+                <div class="horitzontal" style="gap:15px; margin-top:10px;">
+                    <button class="boto" onclick="giraEsquerra()">⬅️</button>
+                    <button class="boto" onclick="giraDreta()">➡️</button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- SCRIPT WEBSOCKET VÍDEO   -->
+<!-- ========================= -->
+<script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    
+    function resizeCanvas() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+    }
+    
+    resizeCanvas();
+    
+    window.addEventListener(
+        "resize",
+        resizeCanvas
+    );
+    
+    let ws;
+    const img = new Image();
+    
+    img.onload = () => {
+    
+        ctx.drawImage(
+            img,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+    };
+    
+    function connectVideo() {
+    
+        ws = new WebSocket(
+            "ws://" + location.host + "/ws"
+        );
+    
+        ws.onmessage = (event) => {
+    
+            img.src =
+                "data:image/jpeg;base64," +
+                event.data;
+        };
+    
+        ws.onclose = () => {
+    
+            console.log(
+                "⚠️ WebSocket tancat"
+            );
+    
+            setTimeout(
+                connectVideo,
+                2000
+            );
+        };
+    
+        ws.onerror = (err) => {
+    
+            console.log(
+                "❌ Error WebSocket",
+                err
+            );
+        };
+    }
+    
+    connectVideo();
+    </script>
+    
+    <!-- ========================= -->
+    <!-- SCRIPT SIDEBAR PERSONES -->
+    <!-- ========================= -->
+    
+    <script>
+    let lastHash = "";
+    
+    let updatingFaces = false;
+    
+    async function updateFaces() {
+    
+        if (updatingFaces) return;
+    
+        updatingFaces = true;
+    
+        try {
+    
+            const response =
+                await fetch(
+                    "/face_data",
+                    {
+                        cache: "no-store"
+                    }
+                );
+    
+            const data =
+                await response.json();
+    
+            const hash =
+                JSON.stringify(data);
+    
+            if (hash === lastHash) {
+                return;
+            }
+    
+            lastHash = hash;
+    
+            const cont =
+                document.getElementById(
+                    "facesContainer"
+                );
+    
+            cont.innerHTML = "";
+    
+            if (!data || data.length === 0) {
+    
+                cont.innerHTML =
+                    "<p>No s'ha detectat ningú...</p>";
+    
+                return;
+            }
+    
+            data.forEach(p => {
+    
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+    
+                card.className =
+                    "ident";
+    
+                card.innerHTML = `
+                    <div class="foto">
+                        <img src="${p.imatge}">
+                    </div>
+    
+                    <div class="stats">
+                        <p><b>${p.nom}</b></p>
+                        <p>Edat: ${p.edat}</p>
+                        <p>Rol: ${p.rol}</p>
+                    </div>
+                `;
+    
+                cont.appendChild(card);
+            });
+    
+        } catch (err) {
+    
+            console.log(
+                "❌ Error sidebar:",
+                err
+            );
+    
+        } finally {
+    
+            updatingFaces = false;
+        }
+    }
+    
+    updateFaces();
+    
+    setInterval(
+        updateFaces,
+        1000
+    );
+    
+    /* ========================= */
+    /* SERVO */
+    /* ========================= */
+    
+    function giraDreta() {
+    
+        fetch(
+            "/dreta",
+            {
+                method: "GET",
+                cache: "no-store"
+            }
+        ).catch(console.error);
+    }
+    
+    function giraEsquerra() {
+    
+        fetch(
+            "/esquerra",
+            {
+                method: "GET",
+                cache: "no-store"
+            }
+        ).catch(console.error);
+    }
+    </script>
+
+</body>
+</html>
